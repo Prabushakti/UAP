@@ -134,8 +134,9 @@ model_option = st.selectbox("Pilih model untuk prediksi:", ("Resnet", "MobileNet
 
 # Tentukan path model berdasarkan pilihan
 if model_option == "Resnet":
-    model_path = Path(__file__).parent / "Model/Image/Resnet/transfer_resnet50_model.h5"
-    predict_func = predict
+    #model_path = Path(__file__).parent / "Model/Image/Resnet/transfer_resnet50_model.h5"
+    model_path = "src/transfer_resnet50_model.tflite"
+    predict_func = predict_tflite
 elif model_option == "MobileNetV2":
     model_path = "src/model_MNV2.h5"
     predict_func = predict_h5
