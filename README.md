@@ -153,3 +153,7 @@ Pada model CNN, dilakukan augmentasi data pada folder training dengan parameter 
 ![Screenshot 2024-12-25 220614](https://github.com/user-attachments/assets/237bb392-e187-4763-9645-603b4e11046b)
 
 ![Screenshot 2024-12-25 220714](https://github.com/user-attachments/assets/601c06df-e19c-4f4a-9e3d-75d41093cbdd)
+
+
+***Link Aplikasi***
+https://shipclassification.streamlit.app/
