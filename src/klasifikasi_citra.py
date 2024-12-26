@@ -143,7 +143,7 @@ elif model_option == "MobileNetV2":
 else:
     #model_path = Path(__file__).parent / "Model/Image/CNN/CNN.h5"
     model_path = "src/CNN.tflite"
-    predict_func = predict
+    predict_func = predict_tflite
 
 # Komponen file uploader untuk banyak file
 uploads = st.file_uploader("Unggah citra untuk mendapatkan hasil prediksi", type=["png", "jpg"], accept_multiple_files=True)
