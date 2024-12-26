@@ -128,6 +128,49 @@ def predict_tflite(uploaded_image, model_path):
 
     score = tf.nn.softmax(output_data[0])
     return class_names[np.argmax(score)], 100 * np.max(score)
+
+def predict_tflite_quantized(uploaded_image, model_path):
+    # Load the TFLite model and allocate tensors.
+    interpreter = tf.lite.Interpreter(model_path=model_path)
+    interpreter.allocate_tensors()
+
+    # Get input and output details
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    # Load the image and preprocess it.
+    img = tf.keras.utils.load_img(image_path, target_size=(224, 224))
+    img = tf.keras.utils.img_to_array(img)
+    img = np.expand_dims(img, axis=0).astype(np.uint8) # Penting: Ubah tipe data ke uint8
+
+    # Normalize the input image based on the quantization parameters
+    input_scale, input_zero_point = input_details[0]["quantization"]
+    img = img / input_scale + input_zero_point
+
+    # Set the input tensor
+    interpreter.set_tensor(input_details[0]['index'], img)
+
+    # Run inference
+    interpreter.invoke()
+
+    # Get the output tensor
+    output_data = interpreter.get_tensor(output_details[0]['index'])
+
+    # Dapatkan parameter kuantisasi output
+    output_scale, output_zero_point = output_details[0]["quantization"]
+
+    # Dequantize output
+    output_data = (output_data.astype(np.float32) - output_zero_point) * output_scale
+
+    score = tf.nn.softmax(output_data[0])
+    class_names = [ # Daftar class harus didefinisikan
+        "Aircraft Carrier", "Auxiliary Ship", "Barge", "Cargo", "Commander",
+        "Container Ship", "Cruiser", "Destroyer", "Dock", "Ferry",
+        "Fishing Vessel", "Frigate", "Hovercraft", "Landing", "Motorboat",
+        "Oil Tanker", "Other Merchant", "Other Ship", "Other Warship", "Patrol",
+        "RoRo", "Sailboat", "Submarine", "Tugboat", "Yacht",
+    ]
+    return class_names[np.argmax(score)], 100 * np.max(score)
     
 # Pilihan model
 model_option = st.selectbox("Pilih model untuk prediksi:", ("Resnet", "MobileNetV2", "CNN"))
@@ -136,7 +179,7 @@ model_option = st.selectbox("Pilih model untuk prediksi:", ("Resnet", "MobileNet
 if model_option == "Resnet":
     #model_path = Path(__file__).parent / "Model/Image/Resnet/transfer_resnet50_model.h5"
     model_path = "src/transfer_resnet50_model.tflite"
-    predict_func = predict_tflite
+    predict_func = predict_tflite_quantized
 elif model_option == "MobileNetV2":
     model_path = "src/model_MNV2.h5"
     predict_func = predict_h5
