@@ -95,17 +95,55 @@ def predict(uploaded_image, model_path):
     score = tf.nn.softmax(output[0])  # Hitung probabilitas
     return class_names[np.argmax(score)], 100 * np.max(score)  # Prediksi label dan confidence
 
+# Fungsi prediksi dengan TFLite
+def predict_tflite(uploaded_image, model_path):
+    class_names = [
+        "Aircraft Carrier", "Auxiliary Ship", "Barge", "Cargo", "Commander",
+        "Container Ship", "Cruiser", "Destroyer", "Dock", "Ferry",
+        "Fishing Vessel", "Frigate", "Hovercraft", "Landing", "Motorboat",
+        "Oil Tanker", "Other Merchant", "Other Ship", "Other Warship", "Patrol",
+        "RoRo", "Sailboat", "Submarine", "Tugboat", "Yacht"
+    ]
+
+    img = tf.keras.utils.load_img(uploaded_image, target_size=(224, 224))
+    img = tf.keras.utils.img_to_array(img) / 255.0
+    img = np.expand_dims(img, axis=0).astype(np.float32) # Penting: tipe data float32
+
+    # Load TFLite model dan alokasikan tensor
+    interpreter = tf.lite.Interpreter(model_path=model_path)
+    interpreter.allocate_tensors()
+
+    # Dapatkan detail input dan output
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    # Set input tensor
+    interpreter.set_tensor(input_details[0]['index'], img)
+
+    # Jalankan inferensi
+    interpreter.invoke()
+
+    # Dapatkan output tensor
+    output_data = interpreter.get_tensor(output_details[0]['index'])
+
+    score = tf.nn.softmax(output_data[0])
+    return class_names[np.argmax(score)], 100 * np.max(score)
+    
 # Pilihan model
 model_option = st.selectbox("Pilih model untuk prediksi:", ("Resnet", "MobileNetV2", "CNN"))
 
 # Tentukan path model berdasarkan pilihan
 if model_option == "Resnet":
     model_path = Path(__file__).parent / "Model/Image/Resnet/transfer_resnet50_model.h5"
+    predict_func = predict
 elif model_option == "MobileNetV2":
     model_path = "src/model_MNV2.h5"
+    predict_func = predict_h5
   #  model_path = Path(__file__).parent / "Model/Image/MobileNetV2/model_MNV2.h5"
 else:
-    model_path = Path(__file__).parent / "Model/Image/CNN/CNN.h5"
+    #model_path = Path(__file__).parent / "Model/Image/CNN/CNN.h5"
+    model_path = "src/CNN.tflite"
+    predict_func = predict
 
 # Komponen file uploader untuk banyak file
 uploads = st.file_uploader("Unggah citra untuk mendapatkan hasil prediksi", type=["png", "jpg"], accept_multiple_files=True)
@@ -122,7 +160,7 @@ if st.button("Predict", type="primary"):
             with st.spinner(f"Memproses citra {upload.name} untuk prediksi..."):
                 # Panggil fungsi prediksi
                 try:
-                    label, confidence = predict(upload, model_path)
+                    label, confidence = predict_func(upload, model_path)
                     st.write(f"Image: **{upload.name}**")
                     st.write(f"Label : **{label}**")
                     st.write(f"Confidence: **{confidence:.5f}%**")
