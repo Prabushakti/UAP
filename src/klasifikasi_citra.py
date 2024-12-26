@@ -139,7 +139,7 @@ def predict_tflite_quantized(uploaded_image, model_path):
     output_details = interpreter.get_output_details()
 
     # Load the image and preprocess it.
-    img = tf.keras.utils.load_img(image_path, target_size=(224, 224))
+    img = tf.keras.utils.load_img(uploaded_image, target_size=(224, 224))
     img = tf.keras.utils.img_to_array(img)
     img = np.expand_dims(img, axis=0).astype(np.uint8) # Penting: Ubah tipe data ke uint8
 
