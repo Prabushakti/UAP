@@ -184,7 +184,7 @@ if model_option == "Resnet":
     predict_func = predict_tflite_quantized
 elif model_option == "MobileNetV2":
     model_path = "src/model_MNV2.h5"
-    predict_func = predict_h5
+    predict_func = predict
   #  model_path = Path(__file__).parent / "Model/Image/MobileNetV2/model_MNV2.h5"
 else:
     #model_path = Path(__file__).parent / "Model/Image/CNN/CNN.h5"
