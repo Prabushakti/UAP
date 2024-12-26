@@ -3,7 +3,8 @@ import tensorflow as tf
 from pathlib import Path
 import streamlit as st
 import base64
-
+import os 
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 def set_background(image_file):
     with open(image_file, "rb") as f:
         img_data = f.read()
