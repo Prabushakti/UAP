@@ -4,24 +4,24 @@ from pathlib import Path
 import streamlit as st
 import base64
 
-def get_base64_image(image_path):
-    with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-    return encoded_string
+def set_background(image_file):
+    with open(image_file, "rb") as f:
+        img_data = f.read()
+    b64_encoded = base64.b64encode(img_data).decode()
+    style = f"""
+        <style>
+        .stApp {{
+            background-image: url(data:image/png;base64,{b64_encoded});
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: local;
+        }}
+        </style>
+    """
+    st.markdown(style, unsafe_allow_html=True)
 
-image_base64 = get_base64_image("src/static/background/Untitled Project3.jpg")
-
-background_css = f"""
-<style>
-body {{
-    background-image: url('data:image/jpg;base64,{image_base64}');
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-}}
-</style>
-"""
-st.markdown(background_css, unsafe_allow_html=True)
+# Set background
+set_background('src/static/background/Untitled Project3.jpg')
 
 # Judul aplikasi
 st.markdown(    """
