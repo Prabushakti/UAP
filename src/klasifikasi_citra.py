@@ -129,41 +129,43 @@ def predict_tflite(uploaded_image, model_path):
     score = tf.nn.softmax(output_data[0])
     return class_names[np.argmax(score)], 100 * np.max(score)
 
-def predict_tflite_quantized(uploaded_image, model_path):
-    # Load the TFLite model and allocate tensors.
+def predict_tflite_quantized(image_path, model_path):
     interpreter = tf.lite.Interpreter(model_path=model_path)
     interpreter.allocate_tensors()
 
-    # Get input and output details
     input_details = interpreter.get_input_details()
     output_details = interpreter.get_output_details()
 
-    # Load the image and preprocess it.
-    img = tf.keras.utils.load_img(uploaded_image, target_size=(224, 224))
+    img = tf.keras.utils.load_img(image_path, target_size=(224, 224))
     img = tf.keras.utils.img_to_array(img)
-    img = np.expand_dims(img, axis=0).astype(np.uint8) # Penting: Ubah tipe data ke uint8
 
-    # Normalize the input image based on the quantization parameters
+    print(f"Tipe data sebelum normalisasi: {img.dtype}") # Debugging
+
+    img = img / 255.0  # Normalisasi *sebelum* konversi ke uint8
+    print(f"Tipe data setelah normalisasi: {img.dtype}") # Debugging
+
     input_scale, input_zero_point = input_details[0]["quantization"]
+    print(f"input_scale: {input_scale}, input_zero_point: {input_zero_point}")
+
     img = img / input_scale + input_zero_point
+    print(f"Tipe data setelah scaling dan zero point: {img.dtype}") # Debugging
 
-    # Set the input tensor
+    img = img.astype(np.uint8) # Konversi ke uint8 *setelah* normalisasi dan scaling
+    print(f"Tipe data setelah konversi ke uint8: {img.dtype}") # Debugging
+
+    img = np.expand_dims(img, axis=0) # Tambahkan dimensi batch setelah konversi
+    print(f"Shape gambar setelah expand_dims: {img.shape}") # Debugging
+
     interpreter.set_tensor(input_details[0]['index'], img)
-
-    # Run inference
     interpreter.invoke()
 
-    # Get the output tensor
     output_data = interpreter.get_tensor(output_details[0]['index'])
 
-    # Dapatkan parameter kuantisasi output
     output_scale, output_zero_point = output_details[0]["quantization"]
-
-    # Dequantize output
     output_data = (output_data.astype(np.float32) - output_zero_point) * output_scale
 
     score = tf.nn.softmax(output_data[0])
-    class_names = [ # Daftar class harus didefinisikan
+    class_names = [
         "Aircraft Carrier", "Auxiliary Ship", "Barge", "Cargo", "Commander",
         "Container Ship", "Cruiser", "Destroyer", "Dock", "Ferry",
         "Fishing Vessel", "Frigate", "Hovercraft", "Landing", "Motorboat",
